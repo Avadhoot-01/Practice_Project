@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import {
   ImagePickerResponse,
+  launchCamera,
   launchImageLibrary,
 } from 'react-native-image-picker';
 import MlkitOcr, { MlkitOcrResult } from 'react-native-mlkit-ocr';
@@ -46,7 +47,7 @@ export default function App() {
                 // <View
                 //   key={line.text}
                 //   style={{
-                //     backgroundColor: '#ccccccaf',
+                //     //backgroundColor: '#ccccccaf',
                 //     position: 'absolute',
                 //     top: fitHeight(line.bounding.top, image?.height ?? 0),
                 //     height: fitHeight(line.bounding.height, image?.height ?? 0),
@@ -62,13 +63,23 @@ export default function App() {
         </ScrollView>
       )}
 
+      <View style={{marginTop: 0,flexDirection:'row',justifyContent:'space-around',}}>
       <Button
         onPress={() => {
           setLoading(true);
           launchGallery(setResult, setImage, setLoading);
         }}
-        title="Start"
+        title="Gallary"
       />
+
+      <Button
+        onPress={() => {
+          setLoading(true);
+          launchCameras(setResult, setImage, setLoading);
+        }}
+        title="Camera"
+      />
+      </View>
     </SafeAreaView>
   );
 }
@@ -93,12 +104,16 @@ function launchGallery(
       mediaType: 'photo',
     },
     async (response: ImagePickerResponse) => {
+      if(response.didCancel)
+      {
+        setLoading(false);
+      }
       if (!response.assets[0].uri) {
         throw new Error('oh!');
       }
       try {
-        setImage(response);
-        setResult(await MlkitOcr.detectFromUri(response.assets[0].uri));
+           setImage(response);
+           setResult(await MlkitOcr.detectFromUri(response.assets[0].uri));
       } catch (e) {
         console.error(e);
       } finally {
@@ -106,6 +121,36 @@ function launchGallery(
       }
     }
   );
+}
+
+function launchCameras(
+  setResult: (result: MlkitOcrResult) => void,
+  setImage: (result: ImagePickerResponse) => void,
+  setLoading: (value: boolean) => void
+) {
+  launchCamera(
+    {
+      mediaType: 'photo',
+    },
+    async (response: ImagePickerResponse) => {
+      if(response.didCancel)
+      {
+        setLoading(false);
+      }
+      if (!response.assets[0].uri) {
+        throw new Error('oh!');
+      }
+      try {
+           setImage(response);
+           setResult(await MlkitOcr.detectFromUri(response.assets[0].uri));
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    }
+  );
+  
 }
 
 const styles = StyleSheet.create({
